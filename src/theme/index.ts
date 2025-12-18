@@ -39,6 +39,7 @@ export const colors = {
     
     // Message blocks
     userMessage: '#f97316',
+    userMessageBg: 'rgba(249, 115, 22, 0.08)',
     assistantMessage: '#1a1a1a',
   },
   light: {
@@ -76,6 +77,7 @@ export const colors = {
     
     // Message blocks
     userMessage: '#ea580c',
+    userMessageBg: 'rgba(234, 88, 12, 0.06)',
     assistantMessage: '#f5f5f5',
   },
 };

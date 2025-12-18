@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -338,11 +338,14 @@ function MessageBlock({ message, colors }: {
   const hasText = textContent.length > 0;
   const hasTools = toolParts.length > 0;
 
-  // User messages - full width, no border radius
+  // User messages - with accent sidebar and tinted background
   if (isUser) {
     return (
-      <View style={[styles.userMessageBlock, { backgroundColor: colors.userMessage }]}>
-        <Markdown isUser={true}>{textContent}</Markdown>
+      <View style={[styles.userMessageBlock, { backgroundColor: colors.userMessageBg }]}>
+        <View style={[styles.userMessageAccent, { backgroundColor: colors.accent }]} />
+        <View style={styles.userMessageContent}>
+          <Markdown isUser={true}>{textContent}</Markdown>
+        </View>
       </View>
     );
   }
@@ -384,38 +387,19 @@ export function ChatScreen({
   onBack,
 }: ChatScreenProps) {
   const { theme, colors: c, isDark } = useTheme();
-  const [initialScrollDone, setInitialScrollDone] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const scrollButtonOpacity = useRef(new Animated.Value(0)).current;
 
-  // Scroll to bottom when messages are first loaded
-  useEffect(() => {
-    if (messages.length > 0 && !initialScrollDone) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: false });
-        setInitialScrollDone(true);
-      }, 100);
-    }
-  }, [messages, initialScrollDone]);
-
-  // Auto-scroll to bottom when new messages arrive (if already near bottom)
-  const prevMessageCount = useRef(messages.length);
-  useEffect(() => {
-    if (messages.length > prevMessageCount.current && initialScrollDone) {
-      // New message arrived, scroll to bottom
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-    prevMessageCount.current = messages.length;
-  }, [messages.length, initialScrollDone]);
+  // Reverse messages for inverted list (newest at bottom visually, but first in array)
+  const invertedMessages = useMemo(() => [...messages].reverse(), [messages]);
 
   // Show/hide scroll button based on scroll position
+  // For inverted list, "top" in scroll terms is actually the bottom of the chat
   const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-    const distanceFromBottom = contentSize.height - contentOffset.y - layoutMeasurement.height;
-    const shouldShow = distanceFromBottom > 200;
+    const { contentOffset } = event.nativeEvent;
+    // In inverted list, scrolling "up" (positive offset) means going to older messages
+    const shouldShow = contentOffset.y > 200;
     
     if (shouldShow !== showScrollButton) {
       setShowScrollButton(shouldShow);
@@ -427,8 +411,9 @@ export function ChatScreen({
     }
   }, [showScrollButton, scrollButtonOpacity]);
 
+  // For inverted list, scroll to "top" (offset 0) is actually the bottom of chat
   const scrollToBottom = useCallback(() => {
-    flatListRef.current?.scrollToEnd({ animated: true });
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, []);
 
   return (
@@ -461,7 +446,8 @@ export function ChatScreen({
 
       <FlatList
         ref={flatListRef}
-        data={messages}
+        data={invertedMessages}
+        inverted
         keyExtractor={(item, index) => item.info.id || String(index)}
         renderItem={({ item }) => (
           <MessageBlock message={item} colors={c} />
@@ -477,10 +463,10 @@ export function ChatScreen({
         scrollEventThrottle={16}
         contentContainerStyle={[
           styles.listContent,
-          messages.length === 0 && styles.emptyList
+          invertedMessages.length === 0 && styles.emptyList
         ]}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
+          <View style={[styles.emptyState, styles.emptyStateInverted]}>
             <Icon name="message-square" size={48} color={c.textMuted} />
             <Text style={[theme.subtitle, { marginTop: spacing.lg, color: c.text }]}>
               {loading ? 'Loading...' : 'No Messages'}
@@ -555,8 +541,15 @@ const styles = StyleSheet.create({
   // Message containers
   messageContainer: {},
   
-  // User message - edge to edge
+  // User message - with accent sidebar
   userMessageBlock: {
+    flexDirection: 'row',
+  },
+  userMessageAccent: {
+    width: 3,
+  },
+  userMessageContent: {
+    flex: 1,
     padding: spacing.lg,
   },
   
@@ -646,6 +639,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.xxl,
     paddingTop: 100,
+  },
+  emptyStateInverted: {
+    transform: [{ scaleY: -1 }],
   },
   emptyText: {
     textAlign: 'center',
