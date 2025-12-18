@@ -129,6 +129,8 @@ function ChatScreenWrapper({ route, navigation }: { route: any; navigation: any 
     isSessionMessagesLoading,
     unsubscribeFromSession,
     serverUrl,
+    sendPrompt,
+    isSending,
   } = useOpenCode();
 
   const messages = getSessionMessages(session.id);
@@ -146,6 +148,10 @@ function ChatScreenWrapper({ route, navigation }: { route: any; navigation: any 
     navigation.goBack();
   }, [navigation]);
 
+  const handleSendMessage = useCallback(async (text: string) => {
+    return sendPrompt(session.id, text);
+  }, [sendPrompt, session.id]);
+
   return (
     <ChatScreen
       session={session}
@@ -153,6 +159,8 @@ function ChatScreenWrapper({ route, navigation }: { route: any; navigation: any 
       loading={loading}
       serverUrl={serverUrl}
       onBack={handleBack}
+      onSendMessage={handleSendMessage}
+      isSending={isSending}
     />
   );
 }

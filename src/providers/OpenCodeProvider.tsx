@@ -99,6 +99,10 @@ interface OpenCodeContextValue {
   unsubscribeFromSession: () => void;
   activeSessionId: string | null;
   
+  // Send prompt to session
+  sendPrompt: (sessionId: string, text: string) => Promise<boolean>;
+  isSending: boolean;
+  
   // Projects
   projects: Project[];
   projectsLoading: boolean;
@@ -149,6 +153,9 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const sseAbortControllerRef = useRef<AbortController | null>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Sending state
+  const [isSending, setIsSending] = useState(false);
   
   // Helper to extract text preview from messages
   const extractPreview = (messages: MessageWithParts[]): string => {
@@ -488,6 +495,30 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
     setActiveSessionId(null);
   }, []);
   
+  // Send a prompt to a session
+  const sendPrompt = useCallback(async (sessionId: string, text: string): Promise<boolean> => {
+    if (!clientRef.current || !text.trim()) return false;
+    
+    setIsSending(true);
+    try {
+      await clientRef.current.session.prompt({
+        path: { id: sessionId },
+        body: {
+          parts: [{ type: 'text', text: text.trim() }],
+        },
+      });
+      
+      // Refresh messages after sending
+      fetchSessionMessages(sessionId, true);
+      return true;
+    } catch (err) {
+      setError((err as Error).message);
+      return false;
+    } finally {
+      setIsSending(false);
+    }
+  }, [fetchSessionMessages]);
+  
   // Fetch projects with stale-while-revalidate
   const fetchProjects = useCallback(async () => {
     if (!clientRef.current) return;
@@ -548,6 +579,8 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
     subscribeToSession,
     unsubscribeFromSession,
     activeSessionId,
+    sendPrompt,
+    isSending,
     projects,
     projectsLoading,
     refreshProjects,

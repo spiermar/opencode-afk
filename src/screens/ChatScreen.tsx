@@ -10,6 +10,10 @@ import {
   NativeScrollEvent,
   Image,
   Dimensions,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
@@ -25,6 +29,8 @@ interface ChatScreenProps {
   loading: boolean;
   serverUrl: string;
   onBack: () => void;
+  onSendMessage: (text: string) => Promise<boolean>;
+  isSending: boolean;
 }
 
 // Get icon for tool type
@@ -458,11 +464,29 @@ export function ChatScreen({
   loading,
   serverUrl,
   onBack,
+  onSendMessage,
+  isSending,
 }: ChatScreenProps) {
   const { theme, colors: c, isDark } = useTheme();
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList>(null);
+  const inputRef = useRef<TextInput>(null);
   const scrollButtonOpacity = useRef(new Animated.Value(0)).current;
+
+  // Handle send message
+  const handleSend = useCallback(async () => {
+    if (!inputText.trim() || isSending) return;
+    
+    const text = inputText.trim();
+    setInputText('');
+    
+    const success = await onSendMessage(text);
+    if (!success) {
+      // Restore the text if sending failed
+      setInputText(text);
+    }
+  }, [inputText, isSending, onSendMessage]);
 
   // Reverse messages for inverted list (newest at bottom visually, but first in array)
   const invertedMessages = useMemo(() => [...messages].reverse(), [messages]);
@@ -490,84 +514,133 @@ export function ChatScreen({
   }, []);
 
   return (
-    <SafeAreaView style={theme.container}>
-      {/* Header */}
-      <View style={styles.headerContainer}>
-        <BlurView
-          intensity={isDark ? 60 : 80}
-          tint={isDark ? 'dark' : 'light'}
-          style={[styles.headerBlur, { borderBottomColor: c.border }]}
-        >
-          <TouchableOpacity 
-            onPress={onBack} 
-            style={styles.backButton}
-            activeOpacity={0.7}
-          >
-            <Icon name="chevron-left" size={24} color={c.accent} />
-            <Text style={[styles.backText, { color: c.accent }]}>Back</Text>
-          </TouchableOpacity>
-          
-          <View style={styles.headerCenter}>
-            <Text style={[styles.headerTitle, { color: c.text }]} numberOfLines={1}>
-              {session.title || 'Chat'}
-            </Text>
-          </View>
-          
-          <View style={styles.headerRight} />
-        </BlurView>
-      </View>
-
-      <FlatList
-        ref={flatListRef}
-        data={invertedMessages}
-        inverted
-        keyExtractor={(item, index) => item.info.id || String(index)}
-        renderItem={({ item }) => (
-          <MessageBlock message={item} colors={c} serverUrl={serverUrl} />
-        )}
-
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        contentContainerStyle={[
-          styles.listContent,
-          invertedMessages.length === 0 && styles.emptyList
-        ]}
-        ListEmptyComponent={
-          <View style={[styles.emptyState, styles.emptyStateInverted]}>
-            <Icon name="message-square" size={48} color={c.textMuted} />
-            <Text style={[theme.subtitle, { marginTop: spacing.lg, color: c.text }]}>
-              {loading ? 'Loading...' : 'No Messages'}
-            </Text>
-            <Text style={[theme.body, theme.textSecondary, styles.emptyText]}>
-              {loading 
-                ? 'Fetching messages' 
-                : 'This session has no messages yet'}
-            </Text>
-          </View>
-        }
-      />
-
-      {/* Scroll to bottom button */}
-      <Animated.View 
-        style={[
-          styles.scrollButtonContainer,
-          { opacity: scrollButtonOpacity }
-        ]}
-        pointerEvents={showScrollButton ? 'auto' : 'none'}
+    <SafeAreaView style={theme.container} edges={['top']}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
       >
-        <TouchableOpacity
-          style={[styles.scrollButton, { backgroundColor: c.bgCard, borderColor: c.border }]}
-          onPress={scrollToBottom}
-          activeOpacity={0.8}
+        {/* Header */}
+        <View style={styles.headerContainer}>
+          <BlurView
+            intensity={isDark ? 60 : 80}
+            tint={isDark ? 'dark' : 'light'}
+            style={[styles.headerBlur, { borderBottomColor: c.border }]}
+          >
+            <TouchableOpacity 
+              onPress={onBack} 
+              style={styles.backButton}
+              activeOpacity={0.7}
+            >
+              <Icon name="chevron-left" size={24} color={c.accent} />
+              <Text style={[styles.backText, { color: c.accent }]}>Back</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.headerCenter}>
+              <Text style={[styles.headerTitle, { color: c.text }]} numberOfLines={1}>
+                {session.title || 'Chat'}
+              </Text>
+            </View>
+            
+            <View style={styles.headerRight} />
+          </BlurView>
+        </View>
+
+        <FlatList
+          ref={flatListRef}
+          data={invertedMessages}
+          inverted
+          keyExtractor={(item, index) => item.info.id || String(index)}
+          renderItem={({ item }) => (
+            <MessageBlock message={item} colors={c} serverUrl={serverUrl} />
+          )}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          contentContainerStyle={[
+            styles.listContent,
+            invertedMessages.length === 0 && styles.emptyList
+          ]}
+          ListEmptyComponent={
+            <View style={[styles.emptyState, styles.emptyStateInverted]}>
+              <Icon name="message-square" size={48} color={c.textMuted} />
+              <Text style={[theme.subtitle, { marginTop: spacing.lg, color: c.text }]}>
+                {loading ? 'Loading...' : 'No Messages'}
+              </Text>
+              <Text style={[theme.body, theme.textSecondary, styles.emptyText]}>
+                {loading 
+                  ? 'Fetching messages' 
+                  : 'This session has no messages yet'}
+              </Text>
+            </View>
+          }
+        />
+
+        {/* Scroll to bottom button */}
+        <Animated.View 
+          style={[
+            styles.scrollButtonContainer,
+            { opacity: scrollButtonOpacity }
+          ]}
+          pointerEvents={showScrollButton ? 'auto' : 'none'}
         >
-          <Icon name="chevron-down" size={20} color={c.text} />
-        </TouchableOpacity>
-      </Animated.View>
+          <TouchableOpacity
+            style={[styles.scrollButton, { backgroundColor: c.bgCard, borderColor: c.border }]}
+            onPress={scrollToBottom}
+            activeOpacity={0.8}
+          >
+            <Icon name="chevron-down" size={20} color={c.text} />
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Input area - styled like user messages */}
+        <View style={[styles.inputBlock, { backgroundColor: c.userMessageBg }]}>
+          <View style={[styles.inputAccent, { backgroundColor: c.accent }]} />
+          <View style={styles.inputContent}>
+            <TextInput
+              ref={inputRef}
+              style={[styles.textInput, { color: c.text }]}
+              placeholder="Message..."
+              placeholderTextColor={c.textMuted}
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+              maxLength={10000}
+              editable={!isSending}
+              onSubmitEditing={handleSend}
+              blurOnSubmit={false}
+            />
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                { backgroundColor: inputText.trim() && !isSending ? c.accent : c.bgElevated }
+              ]}
+              onPress={handleSend}
+              disabled={!inputText.trim() || isSending}
+              activeOpacity={0.7}
+            >
+              {isSending ? (
+                <ActivityIndicator size="small" color={c.text} />
+              ) : (
+                <Icon 
+                  name="arrow-up" 
+                  size={18} 
+                  color={inputText.trim() ? '#fff' : c.textMuted} 
+                />
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   headerContainer: {
     zIndex: 100,
   },
@@ -742,7 +815,7 @@ const styles = StyleSheet.create({
   // Scroll to bottom button
   scrollButtonContainer: {
     position: 'absolute',
-    bottom: spacing.xl,
+    bottom: 70, // Above input area
     right: spacing.lg,
   },
   scrollButton: {
@@ -757,5 +830,34 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
+  },
+  
+  // Input area - styled like user messages
+  inputBlock: {
+    flexDirection: 'row',
+  },
+  inputAccent: {
+    width: 3,
+  },
+  inputContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
+  },
+  textInput: {
+    flex: 1,
+    ...typography.body,
+    maxHeight: 120,
+    paddingVertical: Platform.OS === 'ios' ? spacing.xs : 0,
+  },
+  sendButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

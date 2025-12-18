@@ -35,6 +35,9 @@ import {
   SearchCode,
   Circle,
   Inbox,
+  Mic,
+  Send,
+  ArrowUp,
 } from 'lucide-react-native';
 import { useTheme } from '../hooks/useTheme';
 
@@ -73,7 +76,10 @@ export type IconName =
   | 'folder-search'
   | 'search-code'
   | 'circle'
-  | 'inbox';
+  | 'inbox'
+  | 'mic'
+  | 'send'
+  | 'arrow-up';
 
 interface IconProps {
   name: IconName;
@@ -118,6 +124,9 @@ const iconMap = {
   'search-code': SearchCode,
   'circle': Circle,
   'inbox': Inbox,
+  'mic': Mic,
+  'send': Send,
+  'arrow-up': ArrowUp,
 };
 
 export function Icon({ name, size = 24, color, strokeWidth = 2 }: IconProps) {
