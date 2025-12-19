@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronDown,
   ChevronUp,
+  ChevronsDown,
   Wifi,
   WifiOff,
   RefreshCw,
@@ -48,6 +49,7 @@ export type IconName =
   | 'chevron-left'
   | 'chevron-down'
   | 'chevron-up'
+  | 'chevrons-down'
   | 'wifi'
   | 'wifi-off'
   | 'refresh'
@@ -95,6 +97,7 @@ const iconMap = {
   'chevron-left': ChevronLeft,
   'chevron-down': ChevronDown,
   'chevron-up': ChevronUp,
+  'chevrons-down': ChevronsDown,
   'wifi': Wifi,
   'wifi-off': WifiOff,
   'refresh': RefreshCw,

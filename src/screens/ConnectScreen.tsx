@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
 import { GlassCard } from '../components/GlassCard';
 import { Icon } from '../components/Icon';
@@ -33,7 +32,7 @@ export function ConnectScreen({
   const { theme, colors: c } = useTheme();
 
   return (
-    <SafeAreaView style={theme.container}>
+    <View style={theme.container}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -115,7 +114,7 @@ export function ConnectScreen({
           </View>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

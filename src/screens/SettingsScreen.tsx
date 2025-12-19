@@ -6,7 +6,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
 import { Icon } from '../components/Icon';
 import { spacing, radius, typography } from '../theme';
@@ -21,11 +21,15 @@ export function SettingsScreen({
   onDisconnect,
 }: SettingsScreenProps) {
   const { theme, colors: c } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  // Extra padding for the floating liquid glass tab bar on iPad
+  const topPadding = insets.top + 60;
 
   return (
-    <SafeAreaView style={theme.container} edges={['top']}>
+    <View style={theme.container}>
       {/* Header */}
-      <View style={[theme.header]}>
+      <View style={[theme.header, { paddingTop: topPadding }]}>
         <View>
           <Text style={theme.title}>Settings</Text>
         </View>
@@ -89,7 +93,7 @@ export function SettingsScreen({
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

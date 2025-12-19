@@ -7,7 +7,7 @@ import {
   RefreshControl,
   StyleSheet,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
 import { Icon } from '../components/Icon';
 import { spacing, typography } from '../theme';
@@ -34,6 +34,7 @@ export function SessionsScreen({
   onSelectSession,
 }: SessionsScreenProps) {
   const { theme, colors: c } = useTheme();
+  const insets = useSafeAreaInsets();
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
 
   // Group sessions by parent
@@ -183,10 +184,13 @@ export function SessionsScreen({
     );
   };
 
+  // Extra padding for the floating liquid glass tab bar on iPad
+  const topPadding = insets.top + 60;
+
   return (
-    <SafeAreaView style={theme.container} edges={['top']}>
+    <View style={theme.container}>
       {/* Header */}
-      <View style={[theme.header]}>
+      <View style={[theme.header, { paddingTop: topPadding }]}>
         <View>
           <Text style={theme.title}>Sessions</Text>
           <Text style={[theme.small, theme.textSecondary]}>
@@ -224,7 +228,7 @@ export function SessionsScreen({
           </View>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
