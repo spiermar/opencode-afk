@@ -37,7 +37,7 @@ export default function Sessions() {
   const handleCreateSession = useCallback(async () => {
     if (!currentWorkspace) {
       Alert.alert('No Workspace', 'Please select a workspace first.');
-      router.push('/workspaces');
+      router.push('/(tabs)/workspaces');
       return;
     }
 
@@ -52,12 +52,8 @@ export default function Sessions() {
     router.push(`/chat/${session.id}`);
   }, [router]);
 
-  const handleBack = useCallback(() => {
-    router.push('/workspaces');
-  }, [router]);
-
   if (!currentWorkspace) {
-    router.replace('/workspaces');
+    router.replace('/(tabs)/workspaces');
     return null;
   }
 
@@ -66,29 +62,17 @@ export default function Sessions() {
   return (
     <View style={theme.container}>
       <View style={[styles.header, { paddingTop: topPadding }]}>
-        <TouchableOpacity 
-          onPress={handleBack} 
-          activeOpacity={0.8}
-        >
-          <GlassView style={styles.glassBackButton}>
-            <Icon name="chevron-left" size={20} color={c.text} />
-            <Text style={[styles.backText, { color: c.text }]}>Back</Text>
-          </GlassView>
-        </TouchableOpacity>
-        
-        <GlassView style={styles.glassTitlePill}>
-          <Text style={[styles.headerTitle, { color: c.text }]} numberOfLines={1}>
-            {currentWorkspace.name}
-          </Text>
-        </GlassView>
+        <Text style={[styles.headerTitle, { color: c.text }]} numberOfLines={1}>
+          {currentWorkspace.name}
+        </Text>
         
         <TouchableOpacity 
           onPress={handleCreateSession} 
           activeOpacity={0.8}
         >
-          <GlassView style={styles.glassBackButton}>
+          <GlassView style={styles.glassButton}>
             <Icon name="file-plus" size={20} color={c.text} />
-            <Text style={[styles.backText, { color: c.text }]}>New</Text>
+            <Text style={[styles.buttonText, { color: c.text }]}>New</Text>
           </GlassView>
         </TouchableOpacity>
       </View>
@@ -108,18 +92,16 @@ export default function Sessions() {
 
 const styles = StyleSheet.create({
   header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 100,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
   },
-  glassBackButton: {
+  headerTitle: {
+    ...typography.title,
+  },
+  glassButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
@@ -127,20 +109,9 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     gap: 4,
   },
-  glassTitlePill: {
-    flex: 1,
-    marginHorizontal: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm,
-    borderRadius: 22,
-    alignItems: 'center',
-  },
-  backText: {
+  buttonText: {
     ...typography.body,
     fontWeight: '500',
-  },
-  headerTitle: {
-    ...typography.bodyMedium,
   },
   container: {
     flex: 1,
