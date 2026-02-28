@@ -129,6 +129,12 @@ export default function CreateWorkspaceScreen() {
       <Stack.Screen
         options={{
           title: 'Select Directory',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+              <Icon name="ban" size={20} color={c.text} />
+              <Text style={[styles.cancelText, { color: c.text }]}>Cancel</Text>
+            </TouchableOpacity>
+          ),
         }}
       />
       <View style={[styles.container, { backgroundColor: c.bg }]}>
@@ -208,5 +214,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
+  },
+  headerButton: {
+    padding: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cancelText: {
+    marginLeft: 4,
+    fontSize: 17,
   },
 });
