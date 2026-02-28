@@ -131,8 +131,7 @@ interface OpenCodeContextValue {
   createWorkspace: (path: string, name?: string) => Promise<Workspace>;
   deleteWorkspace: (id: string) => Promise<void>;
   setCurrentWorkspace: (workspace: Workspace | null) => Promise<void>;
-  createSessionWithWorkspace: (options?: { parentID?: string; title?: string }) => Promise<any>;
-  refreshSessionsWithWorkspace: (workspacePath: string) => Promise<void>;
+  createSession: (options?: { parentID?: string; title?: string }) => Promise<any>;
   
   // Client access
   client: OpenCodeClient | null;
@@ -286,53 +285,6 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
       await setCurrentWorkspace(null);
     }
   }, [workspaces, currentWorkspace, setCurrentWorkspace]);
-
-  const refreshSessionsWithWorkspace = useCallback(async (workspacePath: string) => {
-    if (!clientRef.current) return;
-    
-    setSessionsRefreshing(true);
-    try {
-      const headers: Record<string, string> = {};
-      if (workspacePath !== '/') {
-        headers['x-opencode-directory'] = workspacePath;
-      }
-
-      const result = await clientRef.current.session.list({
-      } as any);
-      
-      setSessions((result.data ?? []) as SessionWithPreview[]);
-    } catch (err) {
-      console.error('Failed to refresh sessions:', err);
-      setError((err as Error).message);
-    } finally {
-      setSessionsRefreshing(false);
-    }
-  }, [setError]);
-
-  const createSessionWithWorkspace = useCallback(async (options?: { parentID?: string; title?: string }) => {
-    if (!currentWorkspace || !clientRef.current) return null;
-    
-    const headers: Record<string, string> = {};
-    if (currentWorkspace.path !== '/') {
-      headers['x-opencode-directory'] = currentWorkspace.path;
-    }
-
-    try {
-      const result = await clientRef.current.session.create({
-        body: {
-          parentID: options?.parentID,
-          title: options?.title,
-        },
-      } as any);
-      
-      await refreshSessionsWithWorkspace(currentWorkspace.path);
-      
-      return result;
-    } catch (err) {
-      console.error('Failed to create session:', err);
-      throw err;
-    }
-  }, [currentWorkspace, refreshSessionsWithWorkspace]);
   
   // Disconnect
   const disconnect = useCallback(() => {
@@ -470,17 +422,37 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
     }
   }, []);
   
-  // Refresh sessions
-  const refreshSessions = useCallback(() => {
-    fetchSessions(true);
-  }, [fetchSessions]);
-  
   // Auto-fetch sessions when connected
   useEffect(() => {
     if (connected) {
       fetchSessions();
     }
   }, [connected, fetchSessions]);
+  
+  // Refresh sessions (manual)
+  const refreshSessions = useCallback(() => {
+    fetchSessions(true);
+  }, [fetchSessions]);
+
+  const createSession = useCallback(async (options?: { parentID?: string; title?: string }) => {
+    if (!clientRef.current) return null;
+    
+    try {
+      const result = await clientRef.current.session.create({
+        body: {
+          parentID: options?.parentID,
+          title: options?.title,
+        },
+      } as any);
+      
+      fetchSessions(true);
+      
+      return result;
+    } catch (err) {
+      console.error('Failed to create session:', err);
+      throw err;
+    }
+  }, [fetchSessions]);
   
   // Get session messages (from cache or state)
   const getSessionMessages = useCallback((sessionId: string): MessageWithParts[] => {
@@ -762,8 +734,7 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
     createWorkspace,
     deleteWorkspace,
     setCurrentWorkspace,
-    createSessionWithWorkspace,
-    refreshSessionsWithWorkspace,
+    createSession,
   };
   
   return (

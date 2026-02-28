@@ -15,38 +15,28 @@ export default function Sessions() {
   const insets = useSafeAreaInsets();
   const {
     currentWorkspace,
-    refreshSessionsWithWorkspace,
-    createSessionWithWorkspace,
+    refreshSessions,
+    createSession,
     sessions,
     sessionsLoading,
     sessionsRefreshing,
   } = useOpenCode();
 
   useEffect(() => {
-    if (currentWorkspace) {
-      refreshSessionsWithWorkspace(currentWorkspace.path);
-    }
-  }, [currentWorkspace, refreshSessionsWithWorkspace]);
+    refreshSessions();
+  }, [refreshSessions]);
 
   const handleRefresh = useCallback(() => {
-    if (currentWorkspace) {
-      refreshSessionsWithWorkspace(currentWorkspace.path);
-    }
-  }, [currentWorkspace, refreshSessionsWithWorkspace]);
+    refreshSessions();
+  }, [refreshSessions]);
 
   const handleCreateSession = useCallback(async () => {
-    if (!currentWorkspace) {
-      Alert.alert('No Workspace', 'Please select a workspace first.');
-      router.push('/(tabs)/workspaces');
-      return;
-    }
-
     try {
-      await createSessionWithWorkspace();
+      await createSession();
     } catch (err) {
       Alert.alert('Error', 'Failed to create session');
     }
-  }, [currentWorkspace, createSessionWithWorkspace, router]);
+  }, [createSession, router]);
 
   const handleSelectSession = useCallback((session: Session) => {
     router.push(`/chat/${session.id}`);
