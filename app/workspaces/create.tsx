@@ -96,13 +96,15 @@ export default function CreateWorkspaceScreen() {
           showsHorizontalScrollIndicator={false}
           renderItem={({ item, index }) => {
             const isLast = index === parts.length - 1;
-            const label = index === 0 ? 'Root' : pathParts[index - 1];
+            const label = item;
             
             return (
               <View style={styles.breadcrumbItem}>
+                <Icon name="folder-open" size={16} color={isLast ? c.text : c.accent} />
                 <TouchableOpacity
                   onPress={() => handleNavigate(item)}
                   disabled={isLast}
+                  style={styles.breadcrumbTouchable}
                 >
                   <Text
                     style={[
@@ -175,9 +177,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  breadcrumbTouchable: {
+    paddingHorizontal: 4,
+  },
   breadcrumbText: {
     fontSize: 14,
-    paddingHorizontal: 4,
+    paddingLeft: 4,
   },
   list: {
     padding: 16,
