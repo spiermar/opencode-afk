@@ -26,12 +26,11 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
     const inAuthGroup = segments[0] === '(tabs)';
     const inChatScreen = segments[0] === 'chat';
     const onConnectScreen = segments[0] === 'connect';
+    const onWorkspacesScreen = segments[0] === 'workspaces';
 
     if (!connected && (inAuthGroup || inChatScreen)) {
-      // Redirect to connect if not authenticated
       router.replace('/connect');
-    } else if (connected && !inAuthGroup && !inChatScreen && segments.length > 0) {
-      // Redirect to workspaces tab if authenticated and not already in tabs or chat
+    } else if (connected && !inAuthGroup && !inChatScreen && !onWorkspacesScreen && segments.length > 0) {
       router.replace('/(tabs)/workspaces');
     }
   }, [connected, connecting, segments, router]);
@@ -59,6 +58,7 @@ export default function RootLayout() {
             />
             <Stack.Screen name="connect" />
             <Stack.Screen name="index" />
+            <Stack.Screen name="workspaces" />
           </Stack>
         </AuthRedirect>
       </OpenCodeProvider>
