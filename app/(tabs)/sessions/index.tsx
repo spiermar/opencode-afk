@@ -84,6 +84,7 @@ export default function Sessions() {
           refreshing={sessionsRefreshing}
           onRefresh={handleRefresh}
           onSelectSession={handleSelectSession}
+          workspacePath={currentWorkspace?.path}
         />
       </View>
     </View>

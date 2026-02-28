@@ -18,6 +18,7 @@ interface SessionsScreenProps {
   refreshing: boolean;
   onRefresh: () => void;
   onSelectSession: (session: Session) => void;
+  workspacePath?: string;
 }
 
 interface GroupedSession extends SessionWithPreview {
@@ -31,6 +32,7 @@ export function SessionsScreen({
   refreshing,
   onRefresh,
   onSelectSession,
+  workspacePath,
 }: SessionsScreenProps) {
   const { theme, colors: c } = useTheme();
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
@@ -185,6 +187,14 @@ export function SessionsScreen({
   return (
     <View style={theme.container}>
       <View style={[styles.countHeader, { paddingHorizontal: spacing.lg, paddingTop: spacing.sm }]}>
+        {workspacePath && (
+          <View style={styles.workspacePathContainer}>
+            <Icon name="folder-open" size={12} color={c.textMuted} />
+            <Text style={[theme.small, { color: c.textMuted, marginLeft: spacing.xs }]} numberOfLines={1}>
+              {workspacePath}
+            </Text>
+          </View>
+        )}
         <Text style={[theme.small, { color: c.textSecondary }]}>
           {parentCount} {parentCount === 1 ? 'session' : 'sessions'}
         </Text>
@@ -226,6 +236,15 @@ export function SessionsScreen({
 const styles = StyleSheet.create({
   countHeader: {
     paddingBottom: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  workspacePathContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   list: {
     paddingBottom: 100,
