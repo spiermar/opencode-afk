@@ -31,8 +31,8 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
       // Redirect to connect if not authenticated
       router.replace('/connect');
     } else if (connected && !inAuthGroup && !inChatScreen && segments.length > 0) {
-      // Redirect to tabs if authenticated and not already in tabs or chat
-      router.replace('/(tabs)/sessions');
+      // Redirect to workspaces tab if authenticated and not already in tabs or chat
+      router.replace('/(tabs)/workspaces');
     }
   }, [connected, connecting, segments, router]);
 

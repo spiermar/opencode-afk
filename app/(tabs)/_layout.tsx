@@ -4,10 +4,8 @@ import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
 export default function TabLayout() {
   return (
     <NativeTabs
-      // iOS 26 Liquid Glass features
       minimizeBehavior="onScrollDown"
-      disableTransparentOnScrollEdge // For FlatList compatibility
-      // Styling for liquid glass color adaptation
+      disableTransparentOnScrollEdge
       labelStyle={{
         color: DynamicColorIOS({
           dark: 'white',
@@ -19,6 +17,11 @@ export default function TabLayout() {
         light: '#0891b2',
       })}
     >
+      <NativeTabs.Trigger name="workspaces">
+        <Icon sf={{ default: 'folder', selected: 'folder.fill' }} />
+        <Label>Workspaces</Label>
+      </NativeTabs.Trigger>
+      
       <NativeTabs.Trigger name="sessions">
         <Icon sf={{ default: 'bubble.left', selected: 'bubble.left.fill' }} />
         <Label>Sessions</Label>

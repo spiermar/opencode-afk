@@ -5,7 +5,7 @@ export default function Index() {
   const { connected } = useOpenCode();
 
   if (connected) {
-    return <Redirect href="/workspaces" />;
+    return <Redirect href="/(tabs)/workspaces" />;
   }
 
   return <Redirect href="/connect" />;

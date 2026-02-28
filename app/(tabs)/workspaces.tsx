@@ -7,10 +7,13 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GlassView } from 'expo-glass-effect';
 import { useOpenCode } from '../../src/hooks/useOpenCode';
 import { useTheme } from '../../src/hooks/useTheme';
 import { Icon } from '../../src/components/Icon';
+import { spacing, typography } from '../../src/theme';
 
 interface WorkspaceItem {
   id: string;
@@ -19,9 +22,10 @@ interface WorkspaceItem {
   isDefault?: boolean;
 }
 
-export default function WorkspacesScreen() {
+export default function WorkspacesTab() {
   const router = useRouter();
   const { theme, colors: c } = useTheme();
+  const insets = useSafeAreaInsets();
   const {
     workspaces,
     currentWorkspace,
@@ -49,7 +53,7 @@ export default function WorkspacesScreen() {
       path: workspace.path,
       createdAt: 0,
     });
-    router.push('/(tabs)/workspaces');
+    router.push('/(tabs)/sessions');
   }, [setCurrentWorkspace, router]);
 
   const handleDeleteWorkspace = useCallback((workspace: WorkspaceItem) => {
@@ -68,6 +72,10 @@ export default function WorkspacesScreen() {
       ]
     );
   }, [deleteWorkspace]);
+
+  const handleCreateWorkspace = useCallback(() => {
+    router.push('/workspaces/create');
+  }, [router]);
 
   const renderItem = useCallback(({ item }: { item: WorkspaceItem }) => {
     const isSelected = currentWorkspace?.path === item.path;
@@ -91,37 +99,59 @@ export default function WorkspacesScreen() {
     );
   }, [currentWorkspace, c, handleSelectWorkspace, handleDeleteWorkspace]);
 
+  const topPadding = insets.top + spacing.sm;
+
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title: 'Workspaces',
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => router.push('/workspaces/create')}
-              style={{ padding: 8 }}
-            >
-              <Icon name="file-plus" size={24} color={c.accent} />
-            </TouchableOpacity>
-          ),
-        }}
-      />
-      <View style={[styles.container, { backgroundColor: c.bg }]}>
-        <FlatList
-          data={allWorkspaces}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.list}
-          refreshing={workspacesLoading}
-        />
+    <View style={[styles.container, { backgroundColor: c.bg }]}>
+      <View style={[styles.header, { paddingTop: topPadding }]}>
+        <Text style={[styles.headerTitle, { color: c.text }]}>Workspaces</Text>
+        <TouchableOpacity 
+          onPress={handleCreateWorkspace}
+          activeOpacity={0.8}
+        >
+          <GlassView style={styles.glassButton}>
+            <Icon name="file-plus" size={20} color={c.text} />
+            <Text style={[styles.buttonText, { color: c.text }]}>New</Text>
+          </GlassView>
+        </TouchableOpacity>
       </View>
-    </>
+
+      <FlatList
+        data={allWorkspaces}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.list}
+        refreshing={workspacesLoading}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  headerTitle: {
+    ...typography.title,
+  },
+  glassButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 22,
+    gap: 4,
+  },
+  buttonText: {
+    ...typography.body,
+    fontWeight: '500',
   },
   list: {
     padding: 16,
