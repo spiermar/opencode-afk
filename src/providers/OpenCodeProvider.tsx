@@ -31,7 +31,7 @@ export interface Workspace {
 }
 
 const STORAGE_KEYS = {
-  serverUrl: '@serverUrl',
+  serverUrl: 'opencode.serverUrl',
   workspaces: '@workspaces',
   currentWorkspace: '@currentWorkspace',
 } as const;
@@ -42,17 +42,31 @@ export interface Message {
   createdAt?: string;
 }
 
+export interface ToolInput {
+  filePath?: string;
+  command?: string;
+  description?: string;
+  pattern?: string;
+  path?: string;
+  query?: string;
+  url?: string;
+  todos?: Array<{ content: string; status: string }>;
+  [key: string]: unknown;
+}
+
+export interface ToolState {
+  status?: string;
+  input?: ToolInput;
+  output?: string;
+}
+
 export interface MessagePart {
   type: string;
   text?: string;
   tool?: string;
   toolName?: string;
   callID?: string;
-  state?: {
-    status?: string;
-    input?: any;
-    output?: string;
-  } | string;
+  state?: ToolState | string;
   reason?: string;
   cost?: number;
   tokens?: {
@@ -60,7 +74,6 @@ export interface MessagePart {
     output: number;
     reasoning: number;
   };
-  // For file/image parts
   mime?: string;
   filename?: string;
   url?: string;
@@ -82,6 +95,24 @@ interface Cache {
   sessions: CacheEntry<SessionWithPreview[]> | null;
   sessionMessages: Map<string, CacheEntry<MessageWithParts[]>>;
   projects: CacheEntry<Project[]> | null;
+}
+
+interface SSEEventProperties {
+  sessionID?: string;
+  session?: { id: string };
+  part?: { sessionID?: string };
+  info?: { sessionID?: string };
+}
+
+interface SSEEventPayload {
+  type?: string;
+  properties?: SSEEventProperties;
+}
+
+interface SSEEvent {
+  payload?: SSEEventPayload;
+  type?: string;
+  properties?: SSEEventProperties;
 }
 
 interface OpenCodeContextValue {
@@ -154,7 +185,6 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
   const [hasSavedServerUrl, setHasSavedServerUrl] = useState(false);
   
   const clientRef = useRef<OpenCodeClient | null>(null);
-  const storageKeyRef = useRef('opencode.serverUrl');
   
   // Cache
   const cacheRef = useRef<Cache>({
@@ -230,7 +260,7 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
       
       clientRef.current = client;
       setServerUrl(targetUrl);
-      await AsyncStorage.setItem(storageKeyRef.current, targetUrl);
+      await AsyncStorage.setItem(STORAGE_KEYS.serverUrl, targetUrl);
       setHasSavedServerUrl(true);
       setConnected(true);
       setConnecting(false);
@@ -388,7 +418,7 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
   useEffect(() => {
     const loadSavedUrl = async () => {
       try {
-        const savedUrl = await AsyncStorage.getItem(storageKeyRef.current);
+        const savedUrl = await AsyncStorage.getItem(STORAGE_KEYS.serverUrl);
         if (savedUrl) {
           setServerUrl(savedUrl);
           setHasSavedServerUrl(true);
@@ -506,12 +536,16 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
     if (!clientRef.current) return null;
     
     try {
+      interface CreateSessionBody {
+        parentID?: string;
+        title?: string;
+      }
       const result = await clientRef.current.session.create({
         body: {
           parentID: options?.parentID,
           title: options?.title,
-        },
-      } as any);
+        } as CreateSessionBody,
+      });
       
       fetchSessions(true);
       
@@ -626,7 +660,7 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
           if (abortController.signal.aborted) break;
           
           // The event structure from SSE
-          const eventData = event as any;
+          const eventData = event as SSEEvent;
           
           // Events can be wrapped in a payload or be direct
           const payload = eventData?.payload || eventData;

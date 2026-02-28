@@ -23,7 +23,7 @@ import { useTheme } from '../hooks/useTheme';
 import { Markdown } from '../components/Markdown';
 import { Icon, IconName } from '../components/Icon';
 import { spacing, typography } from '../theme';
-import type { Session, MessageWithParts, MessagePart } from '../providers/OpenCodeProvider';
+import type { Session, MessageWithParts, MessagePart, ToolInput, ToolState } from '../providers/OpenCodeProvider';
 
 interface ChatScreenProps {
   session: Session;
@@ -64,13 +64,14 @@ interface ToolDetails {
     output?: string;
     filePath?: string;
     command?: string;
-    todos?: any[];
+    todos?: Array<{ content: string; status: string }>;
   };
 }
 
-function getToolDetails(toolName: string, state: any): ToolDetails | null {
-  const input = state?.input;
-  const output = state?.output;
+function getToolDetails(toolName: string, state: ToolState | string | undefined): ToolDetails | null {
+  const stateObj = typeof state === 'object' ? state : undefined;
+  const input = stateObj?.input as ToolInput | undefined;
+  const output = stateObj?.output;
   
   // Clean output - remove line numbers if present
   const cleanOutput = (text: string | undefined) => {
@@ -119,7 +120,7 @@ function getToolDetails(toolName: string, state: any): ToolDetails | null {
       const description = input?.description;
       return { 
         label: 'Ran', 
-        detail: description || (command?.length > 40 ? command.substring(0, 37) + '...' : command),
+        detail: description || (command && command.length > 40 ? command.substring(0, 37) + '...' : command),
         expandedContent: {
           command,
           output: cleanOutput(output),
@@ -178,7 +179,9 @@ function getToolDetails(toolName: string, state: any): ToolDetails | null {
       const url = input?.url;
       let hostname = 'URL';
       try {
-        hostname = new URL(url).hostname;
+        if (url) {
+          hostname = new URL(url).hostname;
+        }
       } catch {}
       return { 
         label: 'Fetched', 
@@ -189,7 +192,7 @@ function getToolDetails(toolName: string, state: any): ToolDetails | null {
     case 'websearch':
     case 'codesearch': {
       const query = input?.query;
-      const shortQuery = query?.length > 35 ? query.substring(0, 32) + '...' : query;
+      const shortQuery = query && query.length > 35 ? query.substring(0, 32) + '...' : query;
       return { 
         label: 'Searched', 
         detail: shortQuery,
@@ -204,7 +207,7 @@ function getToolDetails(toolName: string, state: any): ToolDetails | null {
   }
 }
 
-function ToolBlock({ part, colors }: { part: any; colors: any }) {
+function ToolBlock({ part, colors }: { part: MessagePart; colors: Record<string, string> }) {
   const [expanded, setExpanded] = useState(false);
   const stateObj = part.state;
   const status = typeof stateObj === 'object' ? stateObj?.status : stateObj;
@@ -327,7 +330,7 @@ function getFullImageUrl(url: string, serverUrl: string): string {
 }
 
 // Image block component
-function ImageBlock({ part, colors, serverUrl }: { part: MessagePart; colors: any; serverUrl: string }) {
+function ImageBlock({ part, colors, serverUrl }: { part: MessagePart; colors: Record<string, string>; serverUrl: string }) {
   const [imageError, setImageError] = useState(false);
   const screenWidth = Dimensions.get('window').width;
   const maxImageWidth = screenWidth - spacing.lg * 2;
@@ -359,8 +362,8 @@ function ImageBlock({ part, colors, serverUrl }: { part: MessagePart; colors: an
 // Helper to check if a message has displayable content
 function hasDisplayableContent(message: MessageWithParts): boolean {
   const textContent = message.parts
-    .filter(p => p.type === 'text' && (p as any).text?.trim())
-    .map(p => (p as any).text)
+    .filter(p => p.type === 'text' && p.text?.trim())
+    .map(p => p.text)
     .join('');
   
   const toolParts = message.parts.filter(
@@ -376,15 +379,15 @@ function hasDisplayableContent(message: MessageWithParts): boolean {
 
 const MessageBlock = React.memo(function MessageBlock({ message, colors, serverUrl }: { 
   message: MessageWithParts; 
-  colors: any;
+  colors: Record<string, string>;
   serverUrl: string;
 }) {
   const isUser = message.info.role === 'user';
   
   // Combine all text parts
   const textContent = message.parts
-    .filter(p => p.type === 'text' && (p as any).text?.trim())
-    .map(p => (p as any).text)
+    .filter(p => p.type === 'text' && p.text?.trim())
+    .map(p => p.text)
     .join('\n\n');
   
   // Get tool parts
