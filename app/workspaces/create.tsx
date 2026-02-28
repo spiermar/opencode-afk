@@ -15,12 +15,13 @@ import { Icon } from '../../src/components/Icon';
 interface DirectoryItem {
   name: string;
   path: string;
+  absolute?: string;
   type: 'file' | 'directory';
 }
 
 export default function CreateWorkspaceScreen() {
   const router = useRouter();
-  const { client } = useOpenCode();
+  const { serverUrl } = useOpenCode();
   const { theme, colors: c } = useTheme();
   const { createWorkspace, setCurrentWorkspace } = useOpenCode();
 
@@ -30,17 +31,17 @@ export default function CreateWorkspaceScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const loadDirectories = useCallback(async (path: string) => {
-    if (!client) return;
-    
     setLoading(true);
     setError(null);
     
     try {
-      const response = await (client as any).get('/files', {
-        query: { path },
-      });
+      const url = new URL(`${serverUrl}/file`);
+      url.searchParams.set('path', path);
       
-      const dirs = (response.data?.files || []).filter(
+      const response = await fetch(url.toString());
+      const data = await response.json();
+      
+      const dirs = (data || []).filter(
         (item: DirectoryItem) => item.type === 'directory'
       );
       setDirectories(dirs.sort((a: DirectoryItem, b: DirectoryItem) => a.name.localeCompare(b.name)));
@@ -49,7 +50,7 @@ export default function CreateWorkspaceScreen() {
     } finally {
       setLoading(false);
     }
-  }, [client]);
+  }, [serverUrl]);
 
   useEffect(() => {
     loadDirectories(currentPath);
@@ -60,7 +61,7 @@ export default function CreateWorkspaceScreen() {
   }, []);
 
   const handleSelectDirectory = useCallback(async (dir: DirectoryItem) => {
-    const workspace = await createWorkspace(dir.path);
+    const workspace = await createWorkspace(dir.absolute || dir.path, dir.name);
     await setCurrentWorkspace(workspace);
     router.replace('/(tabs)/sessions');
   }, [createWorkspace, setCurrentWorkspace, router]);
