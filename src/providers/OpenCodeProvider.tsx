@@ -731,14 +731,11 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
   // Send a prompt to a session
   const sendPrompt = useCallback(async (sessionId: string, text: string): Promise<boolean> => {
     if (!clientRef.current || !text.trim()) {
-      console.log('[OpenCode] sendPrompt: No client or empty text');
       return false;
     }
     
     setIsSending(true);
     try {
-      console.log('[OpenCode] Sending prompt to session:', sessionId, 'text:', text.substring(0, 50));
-      
       // Use promptAsync which returns immediately - updates come via SSE/polling
       const result = await clientRef.current.session.promptAsync({
         path: { id: sessionId },
@@ -746,8 +743,6 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
           parts: [{ type: 'text', text: text.trim() }],
         },
       });
-      
-      console.log('[OpenCode] Prompt sent successfully:', result);
       
       // Refresh messages after sending
       fetchSessionMessages(sessionId, true);
