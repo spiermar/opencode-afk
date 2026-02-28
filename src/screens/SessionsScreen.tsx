@@ -7,7 +7,6 @@ import {
   RefreshControl,
   StyleSheet,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
 import { Icon } from '../components/Icon';
 import { spacing, typography } from '../theme';
@@ -34,7 +33,6 @@ export function SessionsScreen({
   onSelectSession,
 }: SessionsScreenProps) {
   const { theme, colors: c } = useTheme();
-  const insets = useSafeAreaInsets();
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
 
   // Group sessions by parent
@@ -184,12 +182,10 @@ export function SessionsScreen({
     );
   };
 
-  const topPadding = insets.top + 60;
-
   return (
     <View style={theme.container}>
-      <View style={[theme.header, { paddingTop: topPadding }]}>
-        <Text style={[theme.small, theme.textSecondary]}>
+      <View style={[styles.countHeader, { paddingHorizontal: spacing.lg, paddingTop: spacing.sm }]}>
+        <Text style={[theme.small, { color: c.textSecondary }]}>
           {parentCount} {parentCount === 1 ? 'session' : 'sessions'}
         </Text>
       </View>
@@ -228,6 +224,9 @@ export function SessionsScreen({
 }
 
 const styles = StyleSheet.create({
+  countHeader: {
+    paddingBottom: spacing.sm,
+  },
   list: {
     paddingBottom: 100,
   },
