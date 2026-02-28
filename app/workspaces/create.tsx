@@ -128,7 +128,6 @@ export default function CreateWorkspaceScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Select Directory',
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
               <Icon name="ban" size={20} color={c.text} />
