@@ -23,6 +23,19 @@ export interface Project {
   path?: string;
 }
 
+export interface Workspace {
+  id: string;
+  name: string;
+  path: string;
+  createdAt: number;
+}
+
+const STORAGE_KEYS = {
+  serverUrl: '@serverUrl',
+  workspaces: '@workspaces',
+  currentWorkspace: '@currentWorkspace',
+} as const;
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -111,6 +124,16 @@ interface OpenCodeContextValue {
   projectsLoading: boolean;
   refreshProjects: () => void;
   
+  // Workspaces
+  workspaces: Workspace[];
+  currentWorkspace: Workspace | null;
+  workspacesLoading: boolean;
+  createWorkspace: (path: string, name?: string) => Promise<Workspace>;
+  deleteWorkspace: (id: string) => Promise<void>;
+  setCurrentWorkspace: (workspace: Workspace | null) => Promise<void>;
+  createSessionWithWorkspace: (options?: { parentID?: string; title?: string }) => Promise<any>;
+  refreshSessionsWithWorkspace: (workspacePath: string) => Promise<void>;
+  
   // Client access
   client: OpenCodeClient | null;
 }
@@ -145,6 +168,10 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
   const [sessions, setSessions] = useState<SessionWithPreview[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [sessionsRefreshing, setSessionsRefreshing] = useState(false);
+  
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [currentWorkspace, setCurrentWorkspaceState] = useState<Workspace | null>(null);
+  const [workspacesLoading, setWorkspacesLoading] = useState(true);
   
   // UI state for session messages (per session)
   const [sessionMessagesState, setSessionMessagesState] = useState<Map<string, MessageWithParts[]>>(new Map());
@@ -210,6 +237,102 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
       return false;
     }
   }, [serverUrl]);
+
+  const loadWorkspaces = useCallback(async () => {
+    try {
+      const stored = await AsyncStorage.getItem(STORAGE_KEYS.workspaces);
+      const loaded = stored ? JSON.parse(stored) : [];
+      setWorkspaces(loaded);
+
+      const currentStored = await AsyncStorage.getItem(STORAGE_KEYS.currentWorkspace);
+      if (currentStored) {
+        setCurrentWorkspaceState(JSON.parse(currentStored));
+      }
+    } catch (err) {
+      console.error('Failed to load workspaces:', err);
+    } finally {
+      setWorkspacesLoading(false);
+    }
+  }, []);
+
+  const setCurrentWorkspace = useCallback(async (workspace: Workspace | null) => {
+    setCurrentWorkspaceState(workspace);
+    if (workspace) {
+      await AsyncStorage.setItem(STORAGE_KEYS.currentWorkspace, JSON.stringify(workspace));
+    } else {
+      await AsyncStorage.removeItem(STORAGE_KEYS.currentWorkspace);
+    }
+  }, []);
+
+  const createWorkspace = useCallback(async (path: string, name?: string) => {
+    const dirName = name || path.split('/').filter(Boolean).pop() || 'Workspace';
+    const workspace: Workspace = {
+      id: `ws_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: dirName,
+      path,
+      createdAt: Date.now(),
+    };
+    const updated = [...workspaces, workspace];
+    setWorkspaces(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.workspaces, JSON.stringify(updated));
+    return workspace;
+  }, [workspaces]);
+
+  const deleteWorkspace = useCallback(async (id: string) => {
+    const updated = workspaces.filter(w => w.id !== id);
+    setWorkspaces(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.workspaces, JSON.stringify(updated));
+    if (currentWorkspace?.id === id) {
+      await setCurrentWorkspace(null);
+    }
+  }, [workspaces, currentWorkspace, setCurrentWorkspace]);
+
+  const refreshSessionsWithWorkspace = useCallback(async (workspacePath: string) => {
+    if (!clientRef.current) return;
+    
+    setSessionsRefreshing(true);
+    try {
+      const headers: Record<string, string> = {};
+      if (workspacePath !== '/') {
+        headers['x-opencode-directory'] = workspacePath;
+      }
+
+      const result = await clientRef.current.session.list({
+      } as any);
+      
+      setSessions((result.data ?? []) as SessionWithPreview[]);
+    } catch (err) {
+      console.error('Failed to refresh sessions:', err);
+      setError((err as Error).message);
+    } finally {
+      setSessionsRefreshing(false);
+    }
+  }, [setError]);
+
+  const createSessionWithWorkspace = useCallback(async (options?: { parentID?: string; title?: string }) => {
+    if (!currentWorkspace || !clientRef.current) return null;
+    
+    const headers: Record<string, string> = {};
+    if (currentWorkspace.path !== '/') {
+      headers['x-opencode-directory'] = currentWorkspace.path;
+    }
+
+    try {
+      const result = await clientRef.current.session.create({
+        body: {
+          parentID: options?.parentID,
+          title: options?.title,
+        },
+      } as any);
+      
+      await refreshSessionsWithWorkspace(currentWorkspace.path);
+      
+      return result;
+    } catch (err) {
+      console.error('Failed to create session:', err);
+      throw err;
+    }
+  }, [currentWorkspace, refreshSessionsWithWorkspace]);
   
   // Disconnect
   const disconnect = useCallback(() => {
@@ -234,7 +357,14 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
     setProjects([]);
   }, []);
 
-  // Load saved server URL on boot
+  // Load saved server URL and workspaces on boot
+  useEffect(() => {
+    const initialize = async () => {
+      loadWorkspaces();
+    };
+    initialize();
+  }, [loadWorkspaces]);
+
   useEffect(() => {
     const loadSavedUrl = async () => {
       try {
@@ -626,6 +756,14 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
     projectsLoading,
     refreshProjects,
     client: clientRef.current,
+    workspaces,
+    currentWorkspace,
+    workspacesLoading,
+    createWorkspace,
+    deleteWorkspace,
+    setCurrentWorkspace,
+    createSessionWithWorkspace,
+    refreshSessionsWithWorkspace,
   };
   
   return (
