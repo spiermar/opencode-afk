@@ -24,7 +24,7 @@ export default function Sessions() {
 
   useEffect(() => {
     refreshSessions();
-  }, []);
+  }, [refreshSessions]);
 
   const handleRefresh = useCallback(() => {
     refreshSessions();
@@ -41,10 +41,6 @@ export default function Sessions() {
   const handleSelectSession = useCallback((session: Session) => {
     router.push(`/chat/${session.id}`);
   }, [router]);
-
-  useEffect(() => {
-    refreshSessions();
-  }, []);
 
   const topPadding = insets.top + spacing.sm;
 
