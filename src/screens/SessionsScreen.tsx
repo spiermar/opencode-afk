@@ -133,10 +133,11 @@ export function SessionsScreen({
     return (
       <View>
         <TouchableOpacity
-          style={[styles.sessionItem, { borderBottomColor: c.divider }]}
+          style={[styles.sessionItem, { backgroundColor: c.bgCard, borderColor: c.border }]}
           onPress={() => onSelectSession(item)}
           activeOpacity={0.7}
         >
+          <Icon name="message-square" size={24} color={c.text} />
           <View style={styles.sessionContent}>
             <View style={styles.sessionHeader}>
               <Text style={[styles.sessionTitle, { color: c.text }]} numberOfLines={1}>
@@ -247,6 +248,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   list: {
+    padding: 16,
     paddingBottom: 100,
   },
   emptyList: {
@@ -255,12 +257,14 @@ const styles = StyleSheet.create({
   sessionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderBottomWidth: 1,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
   },
   sessionContent: {
     flex: 1,
+    marginLeft: 12,
     marginRight: spacing.sm,
     gap: spacing.xs,
   },
