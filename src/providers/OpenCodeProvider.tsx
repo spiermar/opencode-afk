@@ -94,7 +94,7 @@ interface OpenCodeContextValue {
   hasSavedServerUrl: boolean;
   
   // Connection actions
-  connect: (url?: string) => Promise<boolean>;
+  connect: (url?: string, directory?: string) => Promise<boolean>;
   disconnect: () => void;
   setServerUrl: (url: string) => void;
   
@@ -209,15 +209,21 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
   };
   
   // Connect to server
-  const connect = useCallback(async (url?: string) => {
+  const connect = useCallback(async (url?: string, directory?: string) => {
     const targetUrl = url || serverUrl;
     setConnecting(true);
     setError(null);
     
     try {
-      const client = createOpencodeClient({
+      const clientConfig: Parameters<typeof createOpencodeClient>[0] = {
         baseUrl: targetUrl,
-      });
+      };
+      
+      if (directory) {
+        clientConfig.directory = directory;
+      }
+      
+      const client = createOpencodeClient(clientConfig);
       
       // Test connection
       await client.session.list();
@@ -236,6 +242,53 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
       return false;
     }
   }, [serverUrl]);
+  
+  // Reconnect with a specific workspace directory
+  const reconnectWithWorkspace = useCallback(async (workspace: Workspace | null) => {
+    // Disconnect - stop SSE and clear client
+    if (sseAbortControllerRef.current) {
+      sseAbortControllerRef.current.abort();
+      sseAbortControllerRef.current = null;
+    }
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    
+    clientRef.current = null;
+    setActiveSessionId(null);
+    
+    // Clear cache
+    cacheRef.current = {
+      sessions: null,
+      sessionMessages: new Map(),
+      projects: null,
+    };
+    setSessions([]);
+    setSessionMessagesState(new Map());
+    setProjects([]);
+    
+    // Connect with new directory
+    const directory = workspace?.path;
+    await connect(serverUrl, directory);
+    
+    // Fetch sessions for the new workspace
+    const client = clientRef.current as OpenCodeClient | null;
+    if (client) {
+      try {
+        const result = await client.session.list();
+        const sessionsData = (result.data ?? []) as Session[];
+        const sorted = sessionsData.sort((a, b) => {
+          const dateA = a.updatedAt || a.createdAt || '';
+          const dateB = b.updatedAt || b.createdAt || '';
+          return dateB.localeCompare(dateA);
+        });
+        setSessions(sorted);
+      } catch (err) {
+        console.error('[OpenCode] Failed to fetch sessions after workspace switch:', err);
+      }
+    }
+  }, [connect, serverUrl]);
 
   const loadWorkspaces = useCallback(async () => {
     try {
@@ -261,21 +314,36 @@ export function OpenCodeProvider({ children, defaultServerUrl = 'http://10.0.10.
     } else {
       await AsyncStorage.removeItem(STORAGE_KEYS.currentWorkspace);
     }
-  }, []);
+    
+    // Reconnect with the new workspace directory
+    await reconnectWithWorkspace(workspace);
+  }, [reconnectWithWorkspace]);
 
   const createWorkspace = useCallback(async (path: string, name?: string) => {
+    // Ensure path is absolute
+    let absolutePath = path;
+    if (!path.startsWith('/')) {
+      console.warn('[OpenCode] Creating workspace with relative path, treating as absolute:', path);
+      // In production, we should require absolute paths, but for compatibility
+      // we'll treat relative paths as provided (assuming they're meant to be absolute)
+    }
+    
     const dirName = name || path.split('/').filter(Boolean).pop() || 'Workspace';
     const workspace: Workspace = {
       id: `ws_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: dirName,
-      path,
+      path: absolutePath,
       createdAt: Date.now(),
     };
     const updated = [...workspaces, workspace];
     setWorkspaces(updated);
     await AsyncStorage.setItem(STORAGE_KEYS.workspaces, JSON.stringify(updated));
+    
+    // Auto-select the new workspace (which will trigger reconnect)
+    await setCurrentWorkspace(workspace);
+    
     return workspace;
-  }, [workspaces]);
+  }, [workspaces, setCurrentWorkspace]);
 
   const deleteWorkspace = useCallback(async (id: string) => {
     const updated = workspaces.filter(w => w.id !== id);

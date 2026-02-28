@@ -5,14 +5,15 @@ import { useOpenCode } from '../src/providers/OpenCodeProvider';
 
 export default function Connect() {
   const router = useRouter();
-  const { serverUrl, setServerUrl, connect, connecting, error } = useOpenCode();
+  const { serverUrl, setServerUrl, connect, connecting, error, currentWorkspace } = useOpenCode();
 
   const handleConnect = useCallback(async () => {
-    const success = await connect(serverUrl);
+    const directory = currentWorkspace?.path;
+    const success = await connect(serverUrl, directory);
     if (success) {
       router.replace('/(tabs)/sessions');
     }
-  }, [connect, serverUrl, router]);
+  }, [connect, serverUrl, router, currentWorkspace]);
 
   return (
     <ConnectScreen

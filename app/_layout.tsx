@@ -6,18 +6,20 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OpenCodeProvider, useOpenCode } from '../src/providers/OpenCodeProvider';
 
 function AuthRedirect({ children }: { children: React.ReactNode }) {
-  const { connected, connecting, connect, storageReady, hasSavedServerUrl } = useOpenCode();
+  const { connected, connecting, connect, storageReady, hasSavedServerUrl, currentWorkspace, workspacesLoading } = useOpenCode();
   const segments = useSegments();
   const router = useRouter();
   const [autoConnectAttempted, setAutoConnectAttempted] = useState(false);
 
   // Auto-connect on mount
   useEffect(() => {
-    if (!autoConnectAttempted && storageReady && hasSavedServerUrl) {
+    if (!autoConnectAttempted && storageReady && hasSavedServerUrl && !workspacesLoading) {
       setAutoConnectAttempted(true);
-      connect();
+      // Connect with current workspace directory if set
+      const directory = currentWorkspace?.path;
+      connect(undefined, directory);
     }
-  }, [autoConnectAttempted, connect, storageReady, hasSavedServerUrl]);
+  }, [autoConnectAttempted, connect, storageReady, hasSavedServerUrl, workspacesLoading, currentWorkspace]);
 
   useEffect(() => {
     // Wait for auto-connect to finish
