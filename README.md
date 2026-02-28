@@ -1,4 +1,4 @@
-# OpenPad
+# OpenCode AFK
 
 A mobile client for [OpenCode](https://opencode.ai) - the AI coding assistant. Built with Expo and React Native.
 
@@ -28,8 +28,8 @@ A mobile client for [OpenCode](https://opencode.ai) - the AI coding assistant. B
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/R44VC0RP/openpad.git
-cd openpad
+git clone https://github.com/spiermar/opencode-afk.git
+cd opencode-afk
 ```
 
 2. Install dependencies:
@@ -58,7 +58,7 @@ npm start
 ## Project Structure
 
 ```
-openpad/
+opencode-afk/
 ├── App.tsx                 # Main app entry point with navigation
 ├── src/
 │   ├── components/         # Reusable UI components
@@ -135,7 +135,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### Reporting Issues
 
-Found a bug or have a feature request? [Open an issue](https://github.com/R44VC0RP/openpad/issues) with:
+Found a bug or have a feature request? [Open an issue](https://github.com/spiermar/opencode-afk/issues) with:
 
 - Clear description of the problem or feature
 - Steps to reproduce (for bugs)

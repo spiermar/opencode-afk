@@ -12,7 +12,7 @@ This document outlines the migration from our current React Navigation setup to 
 ## Current Architecture
 
 ```
-openpad/
+opencode-afk/
 ├── App.tsx                    # Manual tab state management
 ├── src/
 │   ├── screens/
@@ -34,7 +34,7 @@ openpad/
 ## Target Architecture (Expo Router)
 
 ```
-openpad/
+opencode-afk/
 ├── app/
 │   ├── _layout.tsx            # Root layout (auth check)
 │   ├── index.tsx              # Redirect to /connect or /(tabs)
@@ -77,7 +77,7 @@ Add required configuration:
 ```json
 {
   "expo": {
-    "scheme": "openpad",
+    "scheme": "opencode",
     "web": {
       "bundler": "metro"
     },
@@ -458,7 +458,7 @@ On iOS < 26 and Android:
 - [ ] Disconnect works and redirects to connect
 - [ ] Tab bar switches between sessions and settings
 - [ ] Pull-to-refresh works on sessions list
-- [ ] Deep linking works (openpad://sessions/123)
+- [ ] Deep linking works (opencode://sessions/123)
 - [ ] iOS 26: Liquid glass effect visible
 - [ ] iOS 26: Tab bar minimizes on scroll
 - [ ] Android: Tabs work with material design

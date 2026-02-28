@@ -1,8 +1,8 @@
-# AGENTS.md - OpenPad Development Guide
+# AGENTS.md - OpenCode AFK Development Guide
 
 ## Overview
 
-OpenPad is a mobile client for OpenCode, built with Expo (React Native). This guide covers development conventions for agents working in this codebase.
+OpenCode AFK is a mobile client for OpenCode, built with Expo (React Native). This guide covers development conventions for agents working in this codebase.
 
 ## Build & Development Commands
 
@@ -52,7 +52,7 @@ npx jest --coverage path/to/test-file.test.ts
 ## Project Structure
 
 ```
-openpad/
+opencode-afk/
 ├── app/                    # Expo Router pages (file-based routing)
 │   ├── _layout.tsx         # Root layout with providers
 │   ├── index.tsx           # Redirects to connect or sessions

@@ -42,7 +42,7 @@ export function ConnectScreen({
             <View style={[styles.logoContainer, { backgroundColor: c.accent }]}>
               <Icon name="zap" size={36} color={c.textInverse} strokeWidth={2.5} />
             </View>
-            <Text style={[theme.hero, styles.title]}>OpenPad</Text>
+            <Text style={[theme.hero, styles.title]}>OpenCode AFK</Text>
             <Text style={[theme.body, theme.textSecondary, styles.subtitle]}>
               Connect to your OpenCode server to get started
             </Text>

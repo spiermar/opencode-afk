@@ -1,6 +1,6 @@
 import { StyleSheet, Platform } from 'react-native';
 
-// OpenPad Design System
+// OpenCode AFK Design System
 // A modern, clean design with subtle depth and warmth
 
 export const colors = {

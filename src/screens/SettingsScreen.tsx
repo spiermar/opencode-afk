@@ -70,7 +70,7 @@ export function SettingsScreen({
                 <Icon name="zap" size={18} color={c.accent} />
               </View>
               <View style={styles.rowContent}>
-                <Text style={[styles.rowLabel, { color: c.text }]}>OpenPad</Text>
+                <Text style={[styles.rowLabel, { color: c.text }]}>OpenCode AFK</Text>
                 <Text style={[styles.rowValue, { color: c.textSecondary }]}>
                   Version 1.0.0
                 </Text>

@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "OpenPad",
-    "slug": "openpad",
+    "name": "OpenCode AFK",
+    "slug": "opencode-afk",
     "version": "1.0.0",
-    "scheme": "openpad",
+    "scheme": "opencode",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.openpad.app"
+      "bundleIdentifier": "com.opencode.afk"
     },
     "android": {
       "adaptiveIcon": {
