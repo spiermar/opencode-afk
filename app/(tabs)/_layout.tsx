@@ -1,5 +1,6 @@
 import { DynamicColorIOS } from 'react-native';
-import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
+import { NativeTabs, Label } from 'expo-router/unstable-native-tabs';
+import { Icon } from '../../src/components/Icon';
 
 export default function TabLayout() {
   return (
@@ -18,17 +19,17 @@ export default function TabLayout() {
       })}
     >
       <NativeTabs.Trigger name="workspaces">
-        <Icon sf={{ default: 'folder', selected: 'folder.fill' }} />
+        <Icon name="folder-open" />
         <Label>Workspaces</Label>
       </NativeTabs.Trigger>
       
       <NativeTabs.Trigger name="sessions">
-        <Icon sf={{ default: 'bubble.left', selected: 'bubble.left.fill' }} />
+        <Icon name="message-square" />
         <Label>Sessions</Label>
       </NativeTabs.Trigger>
       
       <NativeTabs.Trigger name="settings">
-        <Icon sf={{ default: 'gear', selected: 'gear' }} />
+        <Icon name="settings" />
         <Label>Settings</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
