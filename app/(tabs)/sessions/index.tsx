@@ -24,7 +24,7 @@ export default function Sessions() {
 
   useEffect(() => {
     refreshSessions();
-  }, [refreshSessions]);
+  }, []);
 
   const handleRefresh = useCallback(() => {
     refreshSessions();
@@ -42,12 +42,29 @@ export default function Sessions() {
     router.push(`/chat/${session.id}`);
   }, [router]);
 
-  if (!currentWorkspace) {
-    router.replace('/(tabs)/workspaces');
-    return null;
-  }
+  useEffect(() => {
+    refreshSessions();
+  }, []);
 
   const topPadding = insets.top + spacing.sm;
+
+  if (!currentWorkspace) {
+    return (
+      <View style={theme.container}>
+        <View style={[styles.header, { paddingTop: topPadding }]}>
+          <Text style={[styles.headerTitle, { color: c.text }]}>Sessions</Text>
+        </View>
+        <View style={styles.emptyContainer}>
+          <Text style={[styles.emptyText, { color: c.textMuted }]}>
+            No workspace selected
+          </Text>
+          <Text style={[styles.emptySubtext, { color: c.textMuted }]}>
+            Go to Workspaces to select a workspace
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={theme.container}>
@@ -74,7 +91,7 @@ export default function Sessions() {
           refreshing={sessionsRefreshing}
           onRefresh={handleRefresh}
           onSelectSession={handleSelectSession}
-          workspacePath={currentWorkspace?.path}
+          workspacePath={currentWorkspace.path}
         />
       </View>
     </View>
@@ -106,5 +123,20 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  emptyText: {
+    ...typography.title,
+    textAlign: 'center',
+  },
+  emptySubtext: {
+    ...typography.body,
+    textAlign: 'center',
+    marginTop: spacing.sm,
   },
 });
