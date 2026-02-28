@@ -229,6 +229,30 @@ Follow Conventional Commits:
 - `test:` Tests
 - `chore:` Maintenance
 
+## Documentation Lookup
+
+Use Context7 to look up documentation for this project's dependencies:
+
+### OpenCode SDK
+- Library ID: `/anomalyco/opencode`
+- Query: `context7_query-docs` with libraryId `/anomalyco/opencode`
+
+### Expo SDK 54
+- Library ID: `/websites/expo_dev_versions_v54_0_0`
+- Query: `context7_query-docs` with libraryId `/websites/expo_dev_versions_v54_0_0`
+
+Example usage:
+```typescript
+// First resolve the library ID (already done above for this project)
+context7_resolve_library_id({ libraryName: "@opencode-ai/sdk", query: "..." })
+
+// Then query the documentation
+context7_query_docs({
+  libraryId: "/anomalyco/opencode",
+  query: "How to connect to OpenCode server and send messages"
+})
+```
+
 ## Additional Notes
 
 - This is an Expo SDK 54 project with React Native 0.81.5
