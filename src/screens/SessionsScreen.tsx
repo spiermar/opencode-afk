@@ -184,19 +184,14 @@ export function SessionsScreen({
     );
   };
 
-  // Extra padding for the floating liquid glass tab bar on iPad
   const topPadding = insets.top + 60;
 
   return (
     <View style={theme.container}>
-      {/* Header */}
       <View style={[theme.header, { paddingTop: topPadding }]}>
-        <View>
-          <Text style={theme.title}>Sessions</Text>
-          <Text style={[theme.small, theme.textSecondary]}>
-            {parentCount} {parentCount === 1 ? 'session' : 'sessions'}
-          </Text>
-        </View>
+        <Text style={[theme.small, theme.textSecondary]}>
+          {parentCount} {parentCount === 1 ? 'session' : 'sessions'}
+        </Text>
       </View>
 
       <FlatList
